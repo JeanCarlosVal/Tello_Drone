@@ -1,69 +1,121 @@
-import sys
-
 import pygame
+from djitellopy import Tello
 
-from pygame.locals import *
+# Define some colors.
+BLACK = pygame.Color('black')
+WHITE = pygame.Color('white')
 
-# basic pygame initialization
+
+# This is a simple class that will help us print to the screen.
+class TextPrint(object):
+    def __init__(self):
+        self.line_height = None
+        self.y = None
+        self.x = None
+        self.reset()
+        self.font = pygame.font.Font(None, 20)
+
+    def tprint(self, screen, textString):
+        textBitmap = self.font.render(textString, True, BLACK)
+        screen.blit(textBitmap, (self.x, self.y))
+        self.y += self.line_height
+
+    def reset(self):
+        self.x = 10
+        self.y = 10
+        self.line_height = 15
+
+    def indent(self):
+        self.x += 10
+
+    def unindent(self):
+        self.x -= 10
+
+
+def display_controller_input():
+    # Get the name from the OS for the controller/joystick.
+    name = joystick.get_name()
+    textPrint.tprint(screen, "Joystick name: {}".format(name))
+
+    try:
+        guid = joystick.get_guid()
+    except AttributeError:
+        # get_guid() is an SDL2 method
+        pass
+    else:
+        textPrint.tprint(screen, "GUID: {}".format(guid))
+
+    # Usually axis run in pairs, up/down for one, and left/right for
+    # the other.
+    axes = joystick.get_numaxes()
+    textPrint.tprint(screen, "Number of axes: {}".format(axes))
+    textPrint.indent()
+
+    for i in range(axes):
+        axis = joystick.get_axis(i)
+        textPrint.tprint(screen, "Axis {} value: {:>6.5f}".format(i, axis))
+    textPrint.unindent()
+
+    buttons = joystick.get_numbuttons()
+    textPrint.tprint(screen, "Number of buttons: {}".format(buttons))
+    textPrint.indent()
+
+    for i in range(buttons):
+        button = joystick.get_button(i)
+        textPrint.tprint(screen,
+                         "Button {:>2} value: {}".format(i, button))
+    textPrint.unindent()
+
+
 pygame.init()
-pygame.display.set_caption('game base')
-screen = pygame.display.set_mode((500, 500), 0, 32)
+
+# Set the width and height of the screen (width, height).
+screen = pygame.display.set_mode((500, 700))
+
+pygame.display.set_caption("My Game")
+
+# Loop until the user clicks the close button.
+done = False
+
+# Used to manage how fast the screen updates.
 clock = pygame.time.Clock()
 
-# Initializing controller objects....
+# Initialize the joysticks.
 pygame.joystick.init()
-joysticks = [pygame.joystick.Joystick(i) for i in range(pygame.joystick.get_count())]
 
-# infinite loop until exit happens
-while True:
+# Get ready to print.
+textPrint = TextPrint()
 
-    for event in pygame.event.get():
-        if event.type == JOYBUTTONDOWN:
-            # Implement some kind of button mapping below.....
-            print(event)
-        if event.type == JOYAXISMOTION:
-            if event.axis == 1:
-                if event.value >= 1:
-                    print("left joystick down")
-                    # Move backwards code below...
+# Getting Tello drone instance ready
+# tello = Tello()
+#
+# tello.connect()
 
-                if event.value <= -1:
-                    print("left joystick up")
-                    # Move forward code below....
+# -------- Main Program Loop -----------
+while not done:
 
-            if event.axis == 0:
-                if event.value >= 1:
-                    print("left joystick right")
-                    # Move to right code below...
+    for event in pygame.event.get():  # User did something.
+        if event.type == pygame.QUIT:  # If user clicked close.
+            done = True
 
-                if event.value <= -1:
-                    print("left joystick left")
-                    # Move to left code below...
+    # First, clear the screen to white. Don't put other drawing commands
+    # above this, or they will be erased with this command.
+    screen.fill(WHITE)
+    textPrint.reset()
 
-            if event.axis == 2:
-                if event.value >= 1:
-                    print("right Joystick right")
-                    # Rotate right code below...
+    # Get count of joysticks.
+    joystick_count = pygame.joystick.get_count()
 
-                if event.value <= -1:
-                    print("right Joystick left")
-                    # Rotate left code below...
+    # For each joystick:
+    for i in range(joystick_count):
+        joystick = pygame.joystick.Joystick(i)
+        joystick.init()
 
-            if event.axis == 3:
-                if event.value >= 1:
-                    print("right joystick down")
-                    # Decrease height code below...
+        display_controller_input()
 
-                if event.value <= -1:
-                    print("right joystick up")
-                    # Increase height code below....
+    pygame.display.flip()
 
-        if event.type == JOYHATMOTION:
-            print(event)
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
-                pygame.quit()
-                sys.exit()
+    # Limit to 20 frames per second.
+    clock.tick(20)
+
+pygame.quit()
