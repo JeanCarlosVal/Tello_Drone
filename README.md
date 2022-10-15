@@ -2,6 +2,7 @@
 
 <!-- In the **Main.py** file found in this repo you are going to find what you need to succesfully recognize a controller input connected to your device, with a usb connection and succesfully get the input data that the controller provides by moving joysticks or pressing buttons. -->
 **Main.py** contains the required code to successfully recognize a controller (currently only via wired USB input) and ensure that the contoller and its buttons work correctly.
+
 For this to work you are going to any IDE for python that there is available or essentially any programmer editor that runs the code, but I recommend an IDE it just makes is simpler to work with python and any external libraries you might need. Talking about libraries here is what you need for this to work.
 
 > Libraries/Packages for Python
