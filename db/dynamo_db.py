@@ -8,22 +8,52 @@ class DroneDb(object):
             TableName=table_name,
             KeySchema=[
                 {
-                    'AttributeName': 'Flight_Id',
+                    'AttributeName': 'Email_Address',
                     'KeyType': 'HASH'  # Partition Key
                 },
                 {
-                    'AttributeName': 'Flight_Validation',
+                    'AttributeName': 'Flight_Id',
                     'KeyType': 'RANGE'  # Sort Key
                 }
             ],
             AttributeDefinitions=[
                 {
+                    'AttributeName': 'Email_Address',
+                    'AttributeType': 'S'
+                },
+                {
                     'AttributeName': 'Flight_Id',
                     'AttributeType': 'S'
                 },
                 {
                     'AttributeName': 'Flight_Validation',
                     'AttributeType': 'S'
+                },
+                {
+                    'AttributeName': 'Flight_Time(s)',
+                    'AttributeType': 'N'
+                }
+            ],
+            GlobalSecondaryIndexes=[  # Secondary Global Index to query only valid flights
+                {
+                    'IndexName': 'flights_validation',
+                    'KeySchema': [
+                        {
+                            'AttributeName': 'Flight_Validation',
+                            'KeyType': 'HASH'
+                        },
+                        {
+                            'AttributeName': 'Flight_Time(s)',
+                            'KeyType': 'RANGE'
+                        }
+                    ],
+                    'Projection': {
+                        'ProjectionType': 'ALL'
+                    },
+                    'ProvisionedThroughput': {
+                        'ReadCapacityUnits': 5,  # ReadCapacityUnits set to 10 strongly consistent reads per second
+                        'WriteCapacityUnits': 5  # WriteCapacityUnits set to 10 writes per second
+                    }
                 }
             ],
             ProvisionedThroughput={

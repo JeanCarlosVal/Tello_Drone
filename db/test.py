@@ -1,16 +1,27 @@
 import os
 import boto3
+from dotenv import load_dotenv, find_dotenv
 from db.dynamo_db import DroneDb
+
+# finding environment variable
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
 
 dynamodb = boto3.resource(
     'dynamodb',
-    aws_access_key_id=os.getenv('DB_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('DB_SECRET_ACCESS_KEY_ID'),
+    aws_access_key_id=os.getenv("DB_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("DB_SECRET_ACCESS_KEY_ID"),
     region_name='us-east-1'
 )
 
+# DroneDB class object
 db = DroneDb(dynamodb)
 
+# Creating Table
+# status = db.create_table("drone_flights")
+# print(status)
+
+# Inserting sample Data to table
 status = db.insert_item('2022-12-05.130', 60, 'John Doe', 'John_Doe@Outlook.com', 'Computer Science')
 print(status)
 status = db.insert_item('2022-12-05.233', 40, 'Jonathan haves', 'Jonathan_haves@hotmail.com', 'Economics')
