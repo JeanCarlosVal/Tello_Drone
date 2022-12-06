@@ -1,33 +1,26 @@
 # Tello_Drone_Controller
 
-<!-- In the **Main.py** file found in this repo you are going to find what you need to succesfully recognize a controller input connected to your device, with a usb connection and succesfully get the input data that the controller provides by moving joysticks or pressing buttons. -->
-**Main.py** contains the required code to successfully recognize a controller (currently only via wired USB input) and ensure that the contoller and its buttons work correctly.
+> Description
 
-For this to work you are going to any IDE for python that there is available or essentially any programmer editor that runs the code, but I recommend an IDE it just makes is simpler to work with python and any external libraries you might need. Talking about libraries here is what you need for this to work.
+In this repository you are going to find a python program to connect to a drone called **TELLO** and be able to controll it with a controller connected via usb (currently the only controller supported is the Xbox Controller). What this program does is connect to drone from there the user will be prompted to enter some information about them and then when user submits, the drone will be available to receive commands from the controller. When the user finishes flying the drone the program will upload user and drone data to a dynamodb table hosted on aws.
 
-> Libraries/Packages for Python
+> Libraries and Packages
 
-- pygame
-  - This is essentially what you are going to use to update the state of the drone with the controller.
-  - Install required either from IDE or from npm.
-- tellopy
-  - This contains the api to controll the drone and access any data that the drone provides.
-  - Install required either from IDE or from npm.
-- sys
-- time
-- traceback
-- pygame.locals
-- pygame.key
-  - The packages above you need to debug or deal with errors in the program.
-  
-> Main.py
+This program uses:
+- os ( to access evironment variables )
+- boto3 ( SDK to use aws services )
+- pygame ( to display user Interface and drone information on a screen )
+- djitellopy from Tello ( to be able to connect to the drone and send/receive data to drone )
 
-We ran this programm using a **Windows system** using an IDE called **PyCharm** this IDE is free to download but you need a license for it, luckily if you are a student there is a free version for it here is the link to downloaded - [PyCharm](https://www.jetbrains.com/pycharm/) - and here is the link for the student license - [Student_license](https://www.jetbrains.com/community/education/#students) - and in case you need python installed on your system here is the link - [Python](https://www.python.org/downloads/) - Alright now that we got all the system requirements out of the way this is how it works.
+> Structure
 
-First we have to get the controller input up and running in the programm, this can be found on line 244 and below, this code will create a window on your system that will display all the buttons and axis available on the controller connected to your system along with the name of the controller that we will be using later on. It looks something like this:
+I have created some classes and initialized them as objects on the program, there is the **Input** class that extends to **UserInputPrint** class that together have functions to render input fields and store the values on variables that can be access within the class. The **DroneInfoPrint** class that all it has is some functionality that makes it easier to render information about the drone.
 
-![Live Controller Input](/assets/images/controller_input.png)
+> DynamoDB
 
-Then we have the rest of the code which is from line 1 - 240, right now is commented out becuase I think the focus at first is getting the controller to work but that controls the drone via WiFi through a controller, we tested out using a **Xbox Controller** and a **PS4 Controller** the layouts are defined as classes in the code. We later call these classes depending on the name of the controller to control the drone.
+[DynamoDB implementation](https://github.com/JeanCarlosVal/Tello_Drone/tree/main/db)
 
-Within this code we have data printing from the drone that displays the height, speed, wifi connection among other things. Since the drone does not include a gps, we can calculate relative coordinates based on the starting point using the x, y, and z speeds.
+> djitellopy
+
+Here is a really usefull documentation from [djitellopy](https://djitellopy.readthedocs.io/en/latest/) package, I recomend going through the implementation beacause it give you a better understanding of what is happening behind the scenes and also what is being send to the drone, this package uses the original Tello sdk its just a wrapper around the original sdk.
+
