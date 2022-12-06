@@ -1,23 +1,46 @@
+import os
+import boto3
 import pygame
 
 from djitellopy import Tello
 
+# input fields status color
 name_color = None
 email_color = None
 department_color = None
 
+# user input Fields
 user_email = pygame.Rect
 user_name = pygame.Rect
 user_department = pygame.Rect
 submit_button = pygame.Rect
 
+# checker if user has submitted information
 user_info = False
 
+# controller values to move drone
 controller = None
 up_down = 0
 left_right = 0
 forward_backward = 0
 yaw = 0
+
+# dynamodb references
+client = boto3.client(
+    'dynamodb',
+    aws_access_key_id=os.getenv('DB_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('DB_SECRET_ACCESS_KEY_ID'),
+    region_name='us-east-1'
+)
+
+dynamodb = boto3.resource(
+    'dynamodb',
+    aws_access_key_id=os.getenv('DB_ACCESS_KEY_ID'),
+    aws_secret_access_key=os.getenv('DB_SECRET_ACCESS_KEY_ID'),
+    region_name='us-east-1'
+)
+
+ddb_exceptions = client.exceptions
 
 
 class UserInputPrint(object):
