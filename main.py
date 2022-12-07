@@ -1,8 +1,11 @@
 import os
 import boto3
 import pygame
-
 from djitellopy import Tello
+from datetime import datetime
+from random import *
+from dotenv import find_dotenv, load_dotenv
+from db.dynamo_db import DroneDb
 
 # input fields status color
 name_color = None
@@ -25,6 +28,10 @@ left_right = 0
 forward_backward = 0
 yaw = 0
 
+# finding environment variable
+dotenv_path = find_dotenv()
+load_dotenv(dotenv_path)
+
 # dynamodb references
 client = boto3.client(
     'dynamodb',
@@ -43,6 +50,7 @@ dynamodb = boto3.resource(
 ddb_exceptions = client.exceptions
 
 
+# This is a class we are going to use to print the user prompts
 class UserInputPrint(object):
     def __init__(self):
         self.line_height = None
@@ -62,6 +70,7 @@ class UserInputPrint(object):
         self.line_height = 20
 
 
+# We are going to use this class to render input fields in the screen
 class Input(UserInputPrint):
     def __init__(self):
         super().__init__()
@@ -72,6 +81,10 @@ class Input(UserInputPrint):
         self.name_input = ''
         self.email_input = ''
         self.department_input = ''
+        self.flight_id = None
+        self.flight_time = None
+
+        # Render user input coming from keyboard
 
     def render_input(self, view, rectangle, color, text):
         self.x += 10
@@ -82,6 +95,8 @@ class Input(UserInputPrint):
         self.x -= 10
         self.y += 50
 
+        # Render the button to submit the information
+
     def render_button(self, view, rectangle, color, text):
         self.x += 50
         self.y += 10
@@ -90,6 +105,7 @@ class Input(UserInputPrint):
         screen.blit(text_surface, (rectangle.x + 5, rectangle.y + 5))
 
 
+# class for XBOX controller button mapping
 class XboxController:
     # Buttons
     TAKEOFF = 5
@@ -127,9 +143,9 @@ class DroneInfoPrint(object):
         self.reset()
         self.font = pygame.font.Font(None, 20)
 
-    def tprint(self, view, textString):
-        textBitmap = self.font.render(textString, True, BLACK)
-        view.blit(textBitmap, (self.x, self.y))
+    def tprint(self, view, text_string):
+        text_bitmap = self.font.render(text_string, True, BLACK)
+        view.blit(text_bitmap, (self.x, self.y))
         self.y += self.line_height
 
     def reset(self):
@@ -144,6 +160,7 @@ class DroneInfoPrint(object):
         self.x -= 10
 
 
+# This displays what the controller is making the drone do along with some extra data that the drone is sending back
 def display_controller_input():
     # Get the name from the OS for the controller/joystick.
     global controller
@@ -152,9 +169,10 @@ def display_controller_input():
     global forward_backward
     global yaw
 
-    name = joystick.get_name()
+    name = joystick.get_name()  # get the name of the controller
     droneInfoPrint.tprint(screen, "Joystick name: {}".format(name))
 
+    # If name of controller matches the string use xbox button mapping class
     if name == 'Controller (Xbox One For Windows)':
         controller = XboxController
 
@@ -166,6 +184,7 @@ def display_controller_input():
     else:
         droneInfoPrint.tprint(screen, "GUID: {}".format(guid))
 
+    # printing drone liver status attributes into the screen
     battery = tello.get_battery()
     flight_time = tello.get_flight_time()
     temperature = tello.get_temperature()
@@ -184,9 +203,10 @@ def display_controller_input():
     droneInfoPrint.tprint(screen, "Drone Movement:")
     droneInfoPrint.indent()
 
-    for i in range(axes):
-        axis = joystick.get_axis(i)
-        if i == controller.LEFT_X:
+    # Printing the drone movement along with giving commands to drone using joysticks
+    for num in range(axes):
+        axis = joystick.get_axis(num)
+        if num == controller.LEFT_X:
             if axis < (0 - controller.DEAD_ZONE):
                 droneInfoPrint.tprint(screen, "Left: {:.0f}".format(axis * 100))
 
@@ -199,7 +219,7 @@ def display_controller_input():
                 left_right = int(axis * 100)
 
                 tello.send_rc_control(left_right, forward_backward, up_down, yaw)
-        elif i == controller.LEFT_Y:
+        elif num == controller.LEFT_Y:
             if axis < (0 - controller.DEAD_ZONE):
                 droneInfoPrint.tprint(screen, "Forward: {:.0f}".format((axis * 100) * controller.INVERTED))
 
@@ -212,7 +232,7 @@ def display_controller_input():
                 forward_backward = int((axis * 100) * controller.INVERTED)
 
                 tello.send_rc_control(left_right, forward_backward, up_down, yaw)
-        elif i == controller.RIGHT_X:
+        elif num == controller.RIGHT_X:
             if axis < (0 - controller.DEAD_ZONE):
                 droneInfoPrint.tprint(screen, "Yaw: {:.0f}".format(axis * 100))
 
@@ -225,7 +245,7 @@ def display_controller_input():
                 yaw = int(axis * 100)
 
                 tello.send_rc_control(left_right, forward_backward, up_down, yaw)
-        elif i == controller.RIGHT_Y:
+        elif num == controller.RIGHT_Y:
             if axis < (0 - controller.DEAD_ZONE):
                 droneInfoPrint.tprint(screen, "Up: {:.0f}".format((axis * 100) * controller.INVERTED))
 
@@ -240,23 +260,32 @@ def display_controller_input():
                 tello.send_rc_control(left_right, forward_backward, up_down, yaw)
     droneInfoPrint.unindent()
 
+    # Getting the buttons reference from the controller
     buttons = joystick.get_numbuttons()
     droneInfoPrint.tprint(screen, "Drone Status:")
     droneInfoPrint.indent()
 
-    for i in range(buttons):
-        button = joystick.get_button(i)
-        if i == controller.TAKEOFF:
+    # listening for any take off or land commands from the controller using the bumpers
+    for input_ in range(buttons):
+        button = joystick.get_button(input_)
+        if input_ == controller.TAKEOFF:
             if button == 1:
                 droneInfoPrint.tprint(screen, "Taking Off....")
                 tello.takeoff()
-        if i == controller.LAND:
+        if input_ == controller.LAND:
             if button == 1:
+                response = tello.send_command_with_return('land', timeout=7)
                 droneInfoPrint.tprint(screen, "Landing......")
-                tello.land()
+
+                if 'ok' in response.lower():
+                    table.insert_item(user.flight_id, flight_time, user.name_input, user.email_input,
+                                      user.department_input)
+
     droneInfoPrint.unindent()
 
 
+# Activating input fields if user clicks into one and blocking the fields if user clicks on somthing else, also it will
+# store whatever the user typed into variables
 def user_input():
     # colors for textBoxes to display between active or inactive
     color_active = pygame.Color('lightskyblue3')
@@ -301,9 +330,12 @@ def user_input():
             user.department_active = False
 
         if submit_button.collidepoint(event.pos):
+            user.flight_id = generate_flight_id()
             user_info = True
-            print("name: {} Email: {} Department: {}".format(user.name_input, user.email_input, user.department_input))
+            print("name: {} Email: {} Department: {} Flight_ID: {}".format(user.name_input, user.email_input,
+                                                                           user.department_input, user.flight_id))
 
+    # Storing user information in variables
     if event.type == pygame.KEYDOWN:
         if user.name_active:
             if event.key == pygame.K_BACKSPACE:
@@ -324,6 +356,7 @@ def user_input():
                 user.department_input += event.unicode
 
 
+# Rendering the hole user input interface
 def render_userinput():
     global user_email
     global user_name
@@ -347,10 +380,20 @@ def render_userinput():
     user.render_button(screen, submit_button, pygame.Color('white'), 'Submit')
 
 
+# generating a flight id
+def generate_flight_id():
+    flight_id = datetime.today().strftime('%Y-%m-%d')
+    flight_id += "."
+    flight_id += str(randint(0, 1000))
+
+    return flight_id
+
+
+# initializing pygame
 pygame.init()
 
 # Set the width and height of the view (width, height).
-screen = pygame.display.set_mode((500, 700))
+screen = pygame.display.set_mode((1000, 1000))
 
 pygame.display.set_caption("Drone_View")
 
@@ -374,6 +417,9 @@ tello = Tello()
 
 # connect to tello
 tello.connect()
+
+# dynamodb table object
+table = DroneDb(dynamodb)
 
 # -------- Main Program Loop -----------
 while not done:
