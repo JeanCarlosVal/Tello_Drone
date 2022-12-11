@@ -2,10 +2,25 @@
   "name": "front_end",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "devStart": "nodemon server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.226.0",
+    "@popperjs/core": "^2.11.6",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "express-ejs-layouts": "^2.5.1"
+  },
+  "devDependencies": {
+    "bootstrap": "^5.2.3",
+    "dotenv": "^16.0.3",
+    "jquery": "^3.6.1",
+    "nodemon": "^2.0.20",
+    "popper.js": "^1.16.1"
+  }
 }

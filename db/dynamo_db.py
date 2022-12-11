@@ -30,7 +30,7 @@ class DroneDb(object):
                     'AttributeType': 'S'
                 },
                 {
-                    'AttributeName': 'Flight_Time(s)',
+                    'AttributeName': 'Flight_Time_s',
                     'AttributeType': 'N'
                 }
             ],
@@ -43,7 +43,7 @@ class DroneDb(object):
                             'KeyType': 'HASH'
                         },
                         {
-                            'AttributeName': 'Flight_Time(s)',
+                            'AttributeName': 'Flight_Time_s',
                             'KeyType': 'RANGE'
                         }
                     ],
@@ -73,8 +73,8 @@ class DroneDb(object):
             Item={
                 'Flight_Id': flight_id,
                 'Flight_Validation': 'F',
-                'Flight_Time(s)': flight_time,
-                'Name': name,
+                'Flight_Time_s': flight_time,
+                'pilot_name': name,
                 'Email_Address': email,
                 'Department': department
             }

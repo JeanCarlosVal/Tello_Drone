@@ -1,0 +1,9 @@
+{
+    "TableName": "drone_flights",
+    "IndexName": "flights_validation",
+    "ExpressionAttributeValues": {
+        ":value": {"S":"T"}
+    },
+    "KeyConditionExpression": "Flight_Validation = :value",
+    "ProjectionExpression": "pilot_name, Email_Address, Flight_Id, Department, Flight_Time_s"
+}

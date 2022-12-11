@@ -17,7 +17,7 @@ dynamodb = boto3.resource(
 # DroneDB class object
 db = DroneDb(dynamodb)
 
-# Creating Table
+# # Creating Table
 # status = db.create_table("drone_flights")
 # print(status)
 
