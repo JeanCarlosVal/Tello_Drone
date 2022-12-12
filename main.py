@@ -1,6 +1,7 @@
 import os
 import boto3
 import pygame
+import pymysql
 from djitellopy import Tello
 from datetime import datetime
 from random import *
@@ -280,6 +281,13 @@ def display_controller_input():
                 if 'ok' in response.lower():
                     table.insert_item(user.flight_id, flight_time, user.name_input, user.email_input,
                                       user.department_input)
+                    sql = '''insert into pilot_flights (flight_id, pilot_name, email_address, department, 
+                    flight_time) values ('%s', '%s', '%s', '%s', %s)''' % (user.flight_id, user.name_input,
+                                                                           user.email_input,
+                                                                           user.department_input, flight_time)
+                    print(sql)
+                    cursor.execute(sql)
+                    rds.commit()
 
     droneInfoPrint.unindent()
 
@@ -420,6 +428,17 @@ tello.connect()
 
 # dynamodb table object
 table = DroneDb(dynamodb)
+
+# connection instance of rds
+rds = pymysql.connect(host='drone-flights-data.cahojfeljvlq.us-east-1.rds.amazonaws.com',
+                      user='admin',
+                      password='admin123')
+# used to execute commands to rds
+cursor = rds.cursor()
+
+# using database
+using_sql = '''use drone_flights'''
+cursor.execute(using_sql)
 
 # -------- Main Program Loop -----------
 while not done:

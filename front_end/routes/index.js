@@ -61,7 +61,7 @@ router.post('/flights', async (req, res) => {
         } else{
             res.render('flights', {table: 'No Results'})
         }
-    },200)
+    },500)
 })
 
 module.exports = router
